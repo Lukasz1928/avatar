@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.unity3d.player.UnityPlayer;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +22,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -35,15 +38,21 @@ public class MainActivity extends AppCompatActivity {
     public boolean recordAudioPermission = false;
     private SpeechRecognizer speechRecognizer;
     private Intent speechRecognizerIntent;
+    private UnityPlayer unityPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+
+        setupAvatarView();
+//        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
 
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
@@ -106,6 +115,21 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    private void setupAvatarView() {
+        FrameLayout unityView = findViewById(R.id.unity_player);
+        unityPlayer = new UnityPlayer(this);
+        int glesMode = unityPlayer.getSettings().getInt("gles_mode", 1);
+        unityPlayer.init(glesMode, false);
+
+
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT);
+        unityView.addView(unityPlayer.getView(), 0, lp);
+
+        unityPlayer.windowFocusChanged(true);
+        unityPlayer.resume();
     }
 
     @Override

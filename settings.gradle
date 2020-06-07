@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':Avatar-debug'
 rootProject.name='avatar'
