@@ -4,32 +4,31 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.Toast;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.unity3d.player.UnityPlayer;
-
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.Toast;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.unity3d.player.UnityPlayer;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Random;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,7 +37,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean recordAudioPermission = false;
     private SpeechRecognizer speechRecognizer;
     private Intent speechRecognizerIntent;
+    private TextToSpeech textToSpeech;
     private UnityPlayer unityPlayer;
+    private boolean textToSpeechInitialized = false;
+    private String utteranceID;
+    private final Locale locale = Locale.UK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +49,47 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-
+        setUpSpeechRecognizer();
+        setUpTextToSpeech();
         setupAvatarView();
 //        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
 
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                textInput = "";
+                speechRecognizer.startListening(speechRecognizerIntent);
+                Snackbar.make(view, "Started listening", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    private void setUpSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
+
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onError(int i) {
+                Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onResults(Bundle bundle) {
+                ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
+                if(matches != null){
+                    textInput = matches.get(0);
+                    Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
+
+                    if(textToSpeechInitialized){
+                        textToSpeech.speak("Test to speak", TextToSpeech.QUEUE_FLUSH, null, utteranceID );
+                    }
+                }
+            }
             @Override
             public void onReadyForSpeech(Bundle bundle) {
 
@@ -81,20 +116,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(int i) {
-                Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onResults(Bundle bundle) {
-                ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
-                if(matches != null){
-                    textInput = matches.get(0);
-                    Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
             public void onPartialResults(Bundle bundle) {
 
             }
@@ -105,19 +126,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                textInput = "";
-                speechRecognizer.startListening(speechRecognizerIntent);
-                Snackbar.make(view, "Started listening", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
-    private void setupAvatarView() {
+    private void setUpTextToSpeech() {
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status == TextToSpeech.SUCCESS){
+                    int result = textToSpeech.setLanguage(locale);
+
+                    if(result == TextToSpeech.LANG_NOT_SUPPORTED ||
+                            result == TextToSpeech.LANG_MISSING_DATA){
+                        Toast.makeText(MainActivity.this, "Language not supported", Toast.LENGTH_SHORT).show();
+                    } else {
+                        textToSpeechInitialized = true;
+                        utteranceID = (new Random().nextInt() % 9999999) + "";
+
+                        Set<Voice> voices = textToSpeech.getVoices();
+                        if(voices != null && !voices.isEmpty()) {
+                            for (Voice voice : voices) {
+                                if(voice.getLocale().equals(locale) && voice.getName().contains("#male")) {
+                                    textToSpeech.setVoice(voice);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Text to speech initialization failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        },  "com.google.android.tts");
+    }
+
+        private void setupAvatarView() {
         FrameLayout unityView = findViewById(R.id.unity_player);
         unityPlayer = new UnityPlayer(this);
         int glesMode = unityPlayer.getSettings().getInt("gles_mode", 1);
@@ -157,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if(requestCode == MY_PERMISSIONS_RECORD_AUDIO) {
-            // If request is cancelled, the result arrays are empty.
             if (grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED) {
                 recordAudioPermission = true;
@@ -174,5 +215,14 @@ public class MainActivity extends AppCompatActivity {
         } else{
             recordAudioPermission = true;
         }
+    }
+
+    @Override
+    protected void onDestroy(){
+        if(textToSpeech != null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
+        super.onDestroy();
     }
 }
