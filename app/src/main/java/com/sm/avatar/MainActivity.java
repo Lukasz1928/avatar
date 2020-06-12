@@ -3,7 +3,23 @@ package com.sm.avatar;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.os.Bundle;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.sm.avatar.chatbot.ChatbotHandler;
+import com.sm.avatar.chatbot.dialogflow.DialogflowChatbotHandler;
+import com.unity3d.player.UnityPlayer;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import android.os.Environment;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -25,10 +41,19 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.unity3d.player.UnityPlayer;
 
+
+import java.io.Console;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
+
+import ai.api.AIConfiguration;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean textToSpeechInitialized = false;
     private String utteranceID;
     private final Locale locale = Locale.UK;
+
+    private ChatbotHandler chatbotHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +99,10 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
 
+        setupAvatarView();
+//        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
+
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
-            @Override
             public void onError(int i) {
                 Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
             }
@@ -84,12 +113,12 @@ public class MainActivity extends AppCompatActivity {
                 if(matches != null){
                     textInput = matches.get(0);
                     Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-
-                    if(textToSpeechInitialized){
-                        textToSpeech.speak("Test to speak", TextToSpeech.QUEUE_FLUSH, null, utteranceID );
-                    }
+                    //String response = textProcessor.process(textInput);
+                    //String response = chat.multisentenceRespond(textInput);
+                    //Toast.makeText(MainActivity.this, "Response: " + response, Toast.LENGTH_LONG).show();
                 }
             }
+
             @Override
             public void onReadyForSpeech(Bundle bundle) {
 
@@ -157,6 +186,28 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         },  "com.google.android.tts");
+    }
+
+    private void initChatbot() {
+        InputStream credentialsStream = getResources().openRawResource(R.raw.agent_credentials);
+        GoogleCredentials credentials = null;
+        try {
+            credentials = GoogleCredentials.fromStream(credentialsStream);
+        }
+        catch(IOException e) {
+            // TODO
+        }
+        try {
+            chatbotHandler = new DialogflowChatbotHandler(new AsyncResponse() {
+                @Override
+                public void taskFinished(String result) {
+                    Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
+                }
+            }, credentials);
+        }
+        catch(IOException e) {
+            // TODO
+        }
     }
 
         private void setupAvatarView() {
