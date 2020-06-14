@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                         PackageManager.PERMISSION_GRANTED) {
                     Log.d("onRequestPermissionsResult", "cameraService starts");
                     if (!cameraPermission) {
-                        bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE | Context.BIND_NOT_FOREGROUND);
+                        bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
                         cameraPermission = true;
                     }
                 }
@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Log.d("onStart", "cameraService starts");
             if (!cameraPermission) {
-                bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE | Context.BIND_NOT_FOREGROUND);
+                bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
                 cameraPermission = true;
             }
         }
