@@ -88,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        cameraServiceIntent = new Intent(this, CameraService.class);
     }
 
     private void setUpSpeechRecognizer() {
@@ -105,15 +107,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResults(Bundle bundle) {
                 ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
-                if(matches != null){
+                if (matches != null) {
                     textInput = matches.get(0);
                     Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
 
-                    if(textToSpeechInitialized){
-                        textToSpeech.speak("Test to speak", TextToSpeech.QUEUE_FLUSH, null, utteranceID );
+                    if (textToSpeechInitialized) {
+                        textToSpeech.speak("Test to speak", TextToSpeech.QUEUE_FLUSH, null, utteranceID);
                     }
                 }
             }
+
             @Override
             public void onReadyForSpeech(Bundle bundle) {
 
@@ -156,20 +159,20 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
-                if(status == TextToSpeech.SUCCESS){
+                if (status == TextToSpeech.SUCCESS) {
                     int result = textToSpeech.setLanguage(locale);
 
-                    if(result == TextToSpeech.LANG_NOT_SUPPORTED ||
-                            result == TextToSpeech.LANG_MISSING_DATA){
+                    if (result == TextToSpeech.LANG_NOT_SUPPORTED ||
+                            result == TextToSpeech.LANG_MISSING_DATA) {
                         Toast.makeText(MainActivity.this, "Language not supported", Toast.LENGTH_SHORT).show();
                     } else {
                         textToSpeechInitialized = true;
                         utteranceID = (new Random().nextInt() % 9999999) + "";
 
                         Set<Voice> voices = textToSpeech.getVoices();
-                        if(voices != null && !voices.isEmpty()) {
+                        if (voices != null && !voices.isEmpty()) {
                             for (Voice voice : voices) {
-                                if(voice.getLocale().equals(locale) && voice.getName().contains("#male")) {
+                                if (voice.getLocale().equals(locale) && voice.getName().contains("#male")) {
                                     textToSpeech.setVoice(voice);
                                     break;
                                 }
@@ -180,10 +183,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Text to speech initialization failed", Toast.LENGTH_SHORT).show();
                 }
             }
-        },  "com.google.android.tts");
+        }, "com.google.android.tts");
     }
 
-        private void setupAvatarView() {
+    private void setupAvatarView() {
         FrameLayout unityView = findViewById(R.id.unity_player);
         unityPlayer = new UnityPlayer(this);
         int glesMode = unityPlayer.getSettings().getInt("gles_mode", 1);
@@ -234,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
                         PackageManager.PERMISSION_GRANTED) {
                     Log.d("onRequestPermissionsResult", "cameraService starts");
                     if (!cameraPermission) {
-                        bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                        bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE | Context.BIND_NOT_FOREGROUND);
                         cameraPermission = true;
                     }
                 }
@@ -259,25 +262,16 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Log.d("onStart", "cameraService starts");
             if (!cameraPermission) {
-                bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE | Context.BIND_NOT_FOREGROUND);
                 cameraPermission = true;
             }
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (cameraPermission) {
-            stopService(cameraServiceIntent);
-            unbindService(cameraServiceConnection);
-            cameraPermission = false;
-        }
-    }
 
     @Override
-    protected void onDestroy(){
-        if(textToSpeech != null){
+    protected void onDestroy() {
+        if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
