@@ -140,20 +140,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onError(int i) {
-                Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onResults(Bundle bundle) {
-                ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
-                if (matches != null) {
-                    textInput = matches.get(0);
-                    Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
             public void onPartialResults(Bundle bundle) {
 
             }
