@@ -155,12 +155,14 @@ public class CameraService extends Service {
     public void onDestroy() {
         try {
             session.abortCaptures();
-        } catch (CameraAccessException e) {
+            session.close();
+        } catch (CameraAccessException | NullPointerException e) {
             Log.e("onDestroy", e.getMessage());
         }
-        session.close();
-        imageReader.close();
-        cameraDevice.close();
+        if (imageReader != null)
+            imageReader.close();
+        if (cameraDevice != null)
+            cameraDevice.close();
     }
 
     private void processImage(Image image) {
@@ -173,8 +175,7 @@ public class CameraService extends Service {
         if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
             FaceDetector.Face face = faces[0];
             Log.d("processImage", face.toString());
-        }
-        else{
+        } else {
             Log.d("processImage", "noFaces");
         }
     }

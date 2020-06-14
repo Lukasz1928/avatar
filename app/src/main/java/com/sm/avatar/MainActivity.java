@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        cameraServiceIntent = new Intent(this, CameraService.class);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -88,8 +89,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        cameraServiceIntent = new Intent(this, CameraService.class);
     }
 
     private void setUpSpeechRecognizer() {
