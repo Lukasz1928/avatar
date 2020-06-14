@@ -11,6 +11,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.sm.avatar.chatbot.ChatbotHandler;
 import com.sm.avatar.chatbot.dialogflow.DialogflowChatbotHandler;
+import com.sm.avatar.chatbot.exceptions.ChatbotInitializationException;
 import com.unity3d.player.UnityPlayer;
 
 import androidx.annotation.Nullable;
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
         setUpSpeechRecognizer();
         setUpTextToSpeech();
         setupAvatarView();
+        setUpChatbot();
 //        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -99,9 +101,6 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
 
-        setupAvatarView();
-//        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
-
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
             public void onError(int i) {
                 Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
@@ -113,9 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 if(matches != null){
                     textInput = matches.get(0);
                     Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-                    //String response = textProcessor.process(textInput);
-                    //String response = chat.multisentenceRespond(textInput);
-                    //Toast.makeText(MainActivity.this, "Response: " + response, Toast.LENGTH_LONG).show();
+                    chatbotHandler.requestResponse(textInput, locale.toLanguageTag());
                 }
             }
 
@@ -188,29 +185,35 @@ public class MainActivity extends AppCompatActivity {
         },  "com.google.android.tts");
     }
 
-    private void initChatbot() {
+    private void setUpChatbot() {
         InputStream credentialsStream = getResources().openRawResource(R.raw.agent_credentials);
         GoogleCredentials credentials = null;
         try {
             credentials = GoogleCredentials.fromStream(credentialsStream);
         }
         catch(IOException e) {
-            // TODO
+            Toast.makeText(MainActivity.this, "Credentials fail", Toast.LENGTH_SHORT).show();
         }
+        chatbotHandler = new DialogflowChatbotHandler(new AsyncResponse() {
+            @Override
+            public void taskFinished(String result) {
+                Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void taskFailed() {
+                Toast.makeText(MainActivity.this, "Fail", Toast.LENGTH_LONG).show();
+            }
+        });
         try {
-            chatbotHandler = new DialogflowChatbotHandler(new AsyncResponse() {
-                @Override
-                public void taskFinished(String result) {
-                    Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
-                }
-            }, credentials);
+            ((DialogflowChatbotHandler)chatbotHandler).initialize(credentials);
         }
-        catch(IOException e) {
-            // TODO
+        catch(ChatbotInitializationException e) {
+            Toast.makeText(MainActivity.this, "Init error", Toast.LENGTH_SHORT).show();
         }
     }
 
-        private void setupAvatarView() {
+    private void setupAvatarView() {
         FrameLayout unityView = findViewById(R.id.unity_player);
         unityPlayer = new UnityPlayer(this);
         int glesMode = unityPlayer.getSettings().getInt("gles_mode", 1);

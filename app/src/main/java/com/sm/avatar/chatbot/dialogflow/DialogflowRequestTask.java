@@ -41,7 +41,12 @@ public class DialogflowRequestTask extends AsyncTask<Void, Void, DetectIntentRes
 
     @Override
     protected void onPostExecute(DetectIntentResponse response) {
-        String msg = response.getQueryResult().getFulfillmentText();
-        this.asyncResponse.taskFinished(msg);
+        if(response != null) {
+            String msg = response.getQueryResult().getFulfillmentText();
+            this.asyncResponse.taskFinished(msg);
+        }
+        else {
+            this.asyncResponse.taskFailed();
+        }
     }
 }
