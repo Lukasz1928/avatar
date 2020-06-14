@@ -1,33 +1,33 @@
 package com.sm.avatar;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.Toast;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.unity3d.player.UnityPlayer;
-
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.WindowManager;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.Toast;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.unity3d.player.UnityPlayer;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -35,10 +35,29 @@ public class MainActivity extends AppCompatActivity {
 
     private String textInput;
     public final int MY_PERMISSIONS_RECORD_AUDIO = 0;
+    public final int MY_PERMISSION_CAMERA = 1;
     public boolean recordAudioPermission = false;
     private SpeechRecognizer speechRecognizer;
     private Intent speechRecognizerIntent;
+    private CameraService cameraService;
+    private Intent cameraServiceIntent;
+    private boolean cameraPermission = false;
     private UnityPlayer unityPlayer;
+
+    private ServiceConnection cameraServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            Log.d("cameraServiceConnection", componentName.toString() + " connected");
+            CameraService.LocalBinder binder = (CameraService.LocalBinder) iBinder;
+            cameraService = binder.getServiceInstance();
+            cameraService.registerClient(MainActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        Log.d("onCreate", "SpeechRecognizer created");
+        cameraServiceIntent = new Intent(MainActivity.this, CameraService.class);
+        Log.d("onCreate", "cameraServiceIntent created");
 
         setupAvatarView();
 //        unityPlayer.UnitySendMessage("GameObject", "LookLeft", "");
@@ -88,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResults(Bundle bundle) {
                 ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
-                if(matches != null){
+                if (matches != null) {
                     textInput = matches.get(0);
                     Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
                 }
@@ -156,14 +178,27 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if(requestCode == MY_PERMISSIONS_RECORD_AUDIO) {
+        switch (requestCode) {
             // If request is cancelled, the result arrays are empty.
-            if (grantResults.length > 0 && grantResults[0] ==
-                    PackageManager.PERMISSION_GRANTED) {
-                recordAudioPermission = true;
+            case MY_PERMISSIONS_RECORD_AUDIO: {
+                if (grantResults.length > 0 && grantResults[0] ==
+                        PackageManager.PERMISSION_GRANTED) {
+                    recordAudioPermission = true;
+                }
+            }
+            case MY_PERMISSION_CAMERA: {
+                if (grantResults.length > 0 && grantResults[0] ==
+                        PackageManager.PERMISSION_GRANTED) {
+                    Log.d("onRequestPermissionsResult", "cameraService starts");
+                    if (!cameraPermission) {
+                        bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                        cameraPermission = true;
+                    }
+                }
             }
         }
     }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -171,8 +206,29 @@ public class MainActivity extends AppCompatActivity {
                 PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
                     MY_PERMISSIONS_RECORD_AUDIO);
-        } else{
+        } else {
             recordAudioPermission = true;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
+                    MY_PERMISSION_CAMERA);
+        } else {
+            Log.d("onStart", "cameraService starts");
+            if (!cameraPermission) {
+                bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                cameraPermission = true;
+            }
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (cameraPermission) {
+            stopService(cameraServiceIntent);
+            unbindService(cameraServiceConnection);
+            cameraPermission = false;
         }
     }
 }
