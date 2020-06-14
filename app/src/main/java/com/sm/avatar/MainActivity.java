@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
         int glesMode = unityPlayer.getSettings().getInt("gles_mode", 1);
         unityPlayer.init(glesMode, false);
 
-
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT);
         unityView.addView(unityPlayer.getView(), 0, lp);
