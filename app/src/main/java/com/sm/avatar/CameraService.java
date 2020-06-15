@@ -22,7 +22,10 @@ import com.google.android.gms.vision.face.FaceDetector;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Binder;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -45,6 +48,7 @@ public class CameraService extends Service {
     protected FaceDetector faceDetector;
     private final IBinder mBinder = new LocalBinder();
     private MainActivity mainActivity;
+    private Handler handler;
 
     protected CameraDevice.StateCallback cameraStateCallback = new CameraDevice.StateCallback() {
         @Override
@@ -110,7 +114,7 @@ public class CameraService extends Service {
                 return;
             }
             manager.openCamera(pickedCamera, cameraStateCallback, null);
-            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 1 /* images buffered */);
+            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
 //            faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
             faceDetector = new
@@ -199,6 +203,23 @@ public class CameraService extends Service {
             Log.d(LOG_TAG + "processImage", face.toString());
             float x = face.getPosition().x + face.getWidth()/2;
             float y = face.getPosition().y + face.getHeight()/2;
+            Message msg = handler.obtainMessage();
+            Bundle b = new Bundle();
+            String direction = "";
+            if(x<WIDTH/3){
+                direction = "LookLeft";
+            } else if (x>WIDTH/3*2){
+                direction = "LookRight";
+            } else if (y<WIDTH/3){
+                direction = "LookUp";
+            } else if (y>WIDTH/3*2){
+                direction = "LookDown";
+            } else {
+
+            }
+            b.putString("direction", direction);
+            msg.setData(b);
+            handler.sendMessage(msg);
         } else {
             Log.d(LOG_TAG + "processImage", "noFaces");
         }
@@ -222,7 +243,7 @@ public class CameraService extends Service {
         }
     }
 
-    public void registerClient(Activity activity) {
+    public void registerClient(Activity activity, Handler handler) {
         this.mainActivity = (MainActivity) activity;
     }
 

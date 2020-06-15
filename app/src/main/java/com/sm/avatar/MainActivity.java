@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -21,6 +23,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private CameraService cameraService;
     private Intent cameraServiceIntent;
     private boolean cameraPermission = false;
+    private Handler cameraHandler;
     private UnityPlayer unityPlayer;
     private boolean textToSpeechInitialized = false;
     private String utteranceID;
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("cameraServiceConnection", componentName.toString() + " connected");
             CameraService.LocalBinder binder = (CameraService.LocalBinder) iBinder;
             cameraService = binder.getServiceInstance();
-            cameraService.registerClient(MainActivity.this);
+            cameraService.registerClient(MainActivity.this, cameraHandler);
         }
 
         @Override
@@ -71,6 +75,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         cameraServiceIntent = new Intent(this, CameraService.class);
+        cameraHandler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                String direction = msg.getData().getString("direction");
+                unityPlayer.UnitySendMessage("GameObject", direction, "");
+            }
+        };
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
