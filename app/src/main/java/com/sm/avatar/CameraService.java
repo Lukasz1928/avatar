@@ -86,14 +86,14 @@ public class CameraService extends Service {
     protected ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
-            Log.d(LOG_TAG + LOG_TAG + "onImageAvailableListener.onImageAvailable", "onImageAvailable");
-            if (System.currentTimeMillis() > cameraCaptureStartTime + CAMERA_CALIBRATION_DELAY) {
+            Log.d(LOG_TAG + "onImageAvailableListener.onImageAvailable", "onImageAvailable");
+//            if (System.currentTimeMillis() > cameraCaptureStartTime + CAMERA_CALIBRATION_DELAY) {
                 Image img = reader.acquireLatestImage();
                 if (img != null) {
                     processImage(img);
                     img.close();
                 }
-            }
+//            }
         }
     };
 
@@ -167,6 +167,7 @@ public class CameraService extends Service {
     }
 
     private void processImage(Image image) {
+        Log.d(LOG_TAG + "processImage", image.toString());
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
 //        buffer.rewind();
         byte[] bytes = new byte[buffer.capacity()];
