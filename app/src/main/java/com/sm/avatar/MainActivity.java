@@ -237,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("onRequestPermissionsResult", "cameraService starts");
                     if (!cameraPermission) {
                         bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                        startService(cameraServiceIntent);
                         cameraPermission = true;
                     }
                 }
@@ -262,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("onStart", "cameraService starts");
             if (!cameraPermission) {
                 bindService(cameraServiceIntent, cameraServiceConnection, Context.BIND_AUTO_CREATE);
+                startService(cameraServiceIntent);
                 cameraPermission = true;
             }
         }
