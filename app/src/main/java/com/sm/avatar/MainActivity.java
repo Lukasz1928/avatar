@@ -197,12 +197,22 @@ public class MainActivity extends AppCompatActivity {
         chatbotHandler = new DialogflowChatbotHandler(new AsyncResponse() {
             @Override
             public void taskFinished(String result) {
-                Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
+                if(textToSpeechInitialized){
+                    textToSpeech.speak(result, TextToSpeech.QUEUE_FLUSH, null, utteranceID );
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
+                }
             }
 
             @Override
             public void taskFailed() {
-                Toast.makeText(MainActivity.this, "Fail", Toast.LENGTH_LONG).show();
+                if(textToSpeechInitialized){
+                    textToSpeech.speak("Failed to get the response", TextToSpeech.QUEUE_FLUSH, null, utteranceID );
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "Failed to get the response", Toast.LENGTH_LONG).show();
+                }
             }
         });
         try {
