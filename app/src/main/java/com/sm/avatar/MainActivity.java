@@ -285,7 +285,28 @@ public class MainActivity extends AppCompatActivity {
         if(textToSpeech != null){
             textToSpeech.stop();
             textToSpeech.shutdown();
+            unityPlayer.quit();
+
         }
         super.onDestroy();
     }
+
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus)
+    {
+        super.onWindowFocusChanged(hasFocus);
+        unityPlayer.windowFocusChanged(hasFocus);
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        unityPlayer.pause();
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        unityPlayer.resume();
+    }
+
 }
