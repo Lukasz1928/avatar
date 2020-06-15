@@ -32,6 +32,7 @@ public class CameraService extends Service {
     protected static final int HEIGHT = 1080;
     protected static final int CAMERA_CALIBRATION_DELAY = 3000;
     protected static final int CAMERACHOICE = CameraCharacteristics.LENS_FACING_FRONT;
+    private static final String LOG_TAG = "CameraService_";
     protected static long cameraCaptureStartTime;
     protected CameraDevice cameraDevice;
     protected CameraCaptureSession session;
@@ -43,19 +44,19 @@ public class CameraService extends Service {
     protected CameraDevice.StateCallback cameraStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
-            Log.d("cameraStateCallback.onOpened", "CameraDevice.StateCallback onOpened");
+            Log.d(LOG_TAG + LOG_TAG + "cameraStateCallback.onOpened", "CameraDevice.StateCallback onOpened");
             cameraDevice = camera;
             actOnReadyCameraDevice();
         }
 
         @Override
         public void onDisconnected(@NonNull CameraDevice camera) {
-            Log.w("cameraStateCallback.onDisconnected", "CameraDevice.StateCallback onDisconnected");
+            Log.w(LOG_TAG + LOG_TAG + "cameraStateCallback.onDisconnected", "CameraDevice.StateCallback onDisconnected");
         }
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {
-            Log.e("cameraStateCallback.onError", "CameraDevice.StateCallback onError " + error);
+            Log.e(LOG_TAG + LOG_TAG + "cameraStateCallback.onError", "CameraDevice.StateCallback onError " + error);
         }
     };
 
@@ -68,7 +69,7 @@ public class CameraService extends Service {
                 session.setRepeatingRequest(createCaptureRequest(), null, null);
                 cameraCaptureStartTime = System.currentTimeMillis();
             } catch (CameraAccessException e) {
-                Log.e("sessionStateCallback.onReady", e.getMessage());
+                Log.e(LOG_TAG + LOG_TAG + "sessionStateCallback.onReady", e.getMessage());
             }
         }
 
@@ -85,13 +86,13 @@ public class CameraService extends Service {
     protected ImageReader.OnImageAvailableListener onImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
-            Log.d("onImageAvailableListener.onImageAvailable", "onImageAvailable");
-            Image img = reader.acquireLatestImage();
-            if (img != null) {
-                if (System.currentTimeMillis() > cameraCaptureStartTime + CAMERA_CALIBRATION_DELAY) {
+            Log.d(LOG_TAG + LOG_TAG + "onImageAvailableListener.onImageAvailable", "onImageAvailable");
+            if (System.currentTimeMillis() > cameraCaptureStartTime + CAMERA_CALIBRATION_DELAY) {
+                Image img = reader.acquireLatestImage();
+                if (img != null) {
                     processImage(img);
+                    img.close();
                 }
-                img.close();
             }
         }
     };
@@ -107,9 +108,9 @@ public class CameraService extends Service {
             imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
             faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
-            Log.d("readyCamera", "imageReader created");
+            Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
         } catch (CameraAccessException e) {
-            Log.e("readyCamera", e.getMessage());
+            Log.e(LOG_TAG + LOG_TAG + "readyCamera", e.getMessage());
         }
     }
 
@@ -130,7 +131,7 @@ public class CameraService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("onStartCommand", "onStartCommand flags " + flags + " startId " + startId);
+        Log.d(LOG_TAG + "onStartCommand", "onStartCommand flags " + flags + " startId " + startId);
 
         readyCamera();
 
@@ -139,7 +140,7 @@ public class CameraService extends Service {
 
     @Override
     public void onCreate() {
-        Log.d("onCreate", "onCreate service");
+        Log.d(LOG_TAG + "onCreate", "onCreate service");
         super.onCreate();
     }
 
@@ -147,7 +148,7 @@ public class CameraService extends Service {
         try {
             cameraDevice.createCaptureSession(Arrays.asList(imageReader.getSurface()), sessionStateCallback, null);
         } catch (CameraAccessException e) {
-            Log.e("actOnReadyCameraDevice", e.getMessage());
+            Log.e(LOG_TAG + "actOnReadyCameraDevice", e.getMessage());
         }
     }
 
@@ -157,7 +158,7 @@ public class CameraService extends Service {
             session.abortCaptures();
             session.close();
         } catch (CameraAccessException | NullPointerException e) {
-            Log.e("onDestroy", e.getMessage());
+            Log.e(LOG_TAG + "onDestroy", e.getMessage());
         }
         if (imageReader != null)
             imageReader.close();
@@ -174,9 +175,9 @@ public class CameraService extends Service {
         FaceDetector.Face[] faces = new FaceDetector.Face[10];
         if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
             FaceDetector.Face face = faces[0];
-            Log.d("processImage", face.toString());
+            Log.d(LOG_TAG + "processImage", face.toString());
         } else {
-            Log.d("processImage", "noFaces");
+            Log.d(LOG_TAG + "processImage", "noFaces");
         }
     }
 
@@ -186,7 +187,7 @@ public class CameraService extends Service {
             builder.addTarget(imageReader.getSurface());
             return builder.build();
         } catch (CameraAccessException e) {
-            Log.e("createCaptureRequest", e.getMessage());
+            Log.e(LOG_TAG + "createCaptureRequest", e.getMessage());
             return null;
         }
     }
