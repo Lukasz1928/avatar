@@ -105,7 +105,7 @@ public class CameraService extends Service {
                 return;
             }
             manager.openCamera(pickedCamera, cameraStateCallback, null);
-            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
+            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.RGB_565, 2 /* images buffered */);
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
             faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
             Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
@@ -170,10 +170,12 @@ public class CameraService extends Service {
         Log.d(LOG_TAG + "processImage", image.toString());
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
 //        buffer.rewind();
-        byte[] bytes = new byte[buffer.capacity()];
-        buffer.get(bytes);
-        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);//.copy(Bitmap.Config.RGB_565, false);
-        FaceDetector.Face[] faces = new FaceDetector.Face[10];
+//        byte[] bytes = new byte[buffer.capacity()];
+//        buffer.get(bytes);
+//        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);//.copy(Bitmap.Config.RGB_565, false);\
+        Bitmap bitmapImage = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.RGB_565);
+        bitmapImage.copyPixelsFromBuffer(buffer);
+        FaceDetector.Face[] faces = new FaceDetector.Face[1];
         if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
             FaceDetector.Face face = faces[0];
             Log.d(LOG_TAG + "processImage", face.toString());
