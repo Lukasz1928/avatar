@@ -112,16 +112,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResults(Bundle bundle) {
-                if(isRealOnResultsCall) {
                     ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
+                    Log.d("ONRESULTS", "ONRESULTS" + String.valueOf(isRealOnResultsCall));
                     if (matches != null) {
-                        Log.d("recognition listener", "onResults");
-                        textInput = matches.get(0);
-                        Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-                        chatbotHandler.requestResponse(textInput, locale.toLanguageTag());
+                        if(isRealOnResultsCall) {
+                            textInput = matches.get(0);
+                            Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
+                            chatbotHandler.requestResponse(textInput, locale.toLanguageTag());
+                            isRealOnResultsCall = false;
+                        }
                     }
-                    isRealOnResultsCall = false;
-                }
             }
 
             @Override
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onBeginningOfSpeech() {
-
+                isRealOnResultsCall = true;
             }
 
             @Override
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEndOfSpeech() {
-                isRealOnResultsCall = true;
+
             }
 
             @Override
