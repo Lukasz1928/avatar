@@ -105,7 +105,7 @@ public class CameraService extends Service {
                 return;
             }
             manager.openCamera(pickedCamera, cameraStateCallback, null);
-            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
+            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 1 /* images buffered */);
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
             faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
             Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
@@ -167,7 +167,7 @@ public class CameraService extends Service {
     }
 
     private void processImage(Image image) {
-        Log.d(LOG_TAG + "processImage", image.toString());
+        Log.d(LOG_TAG + "processImage", image.toString()+", planesCount:"+ image.getPlanes().length);
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
 //        byte[] bytes = new byte[buffer.capacity()];
 //        buffer.get(bytes);
