@@ -26,6 +26,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -102,17 +103,24 @@ public class MainActivity extends AppCompatActivity {
         speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
 
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
+
+            private boolean isRealOnResultsCall = false;
+
             public void onError(int i) {
                 Toast.makeText(MainActivity.this, "Error occurred during listening", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onResults(Bundle bundle) {
-                ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
-                if(matches != null){
-                    textInput = matches.get(0);
-                    Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
-                    chatbotHandler.requestResponse(textInput, locale.toLanguageTag());
+                if(isRealOnResultsCall) {
+                    ArrayList<String> matches = bundle.getStringArrayList(speechRecognizer.RESULTS_RECOGNITION);
+                    if (matches != null) {
+                        Log.d("recognition listener", "onResults");
+                        textInput = matches.get(0);
+                        Toast.makeText(MainActivity.this, "Recognized text: " + textInput, Toast.LENGTH_LONG).show();
+                        chatbotHandler.requestResponse(textInput, locale.toLanguageTag());
+                    }
+                    isRealOnResultsCall = false;
                 }
             }
 
@@ -138,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEndOfSpeech() {
-
+                isRealOnResultsCall = true;
             }
 
             @Override
@@ -198,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void taskFinished(String result) {
                 if(textToSpeechInitialized){
-                    textToSpeech.speak(result, TextToSpeech.QUEUE_FLUSH, null, utteranceID );
+                    textToSpeech.speak(result, TextToSpeech.QUEUE_FLUSH, null, utteranceID);
                 }
                 else{
                     Toast.makeText(MainActivity.this, "Response: " + result, Toast.LENGTH_LONG).show();
