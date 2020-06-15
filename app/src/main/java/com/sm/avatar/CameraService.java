@@ -114,7 +114,12 @@ public class CameraService extends Service {
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
 //            faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
             faceDetector = new
-                    FaceDetector.Builder(getApplicationContext()).setTrackingEnabled(false)
+                    FaceDetector.Builder(getApplicationContext())
+                    .setTrackingEnabled(false)
+                    .setProminentFaceOnly(true)
+                    .setClassificationType(FaceDetector.NO_CLASSIFICATIONS)
+                    .setLandmarkType(FaceDetector.NO_LANDMARKS)
+                    .setMode(FaceDetector.FAST_MODE)
                     .build();
             if(!faceDetector.isOperational()){
                 throw new CameraAccessException(CameraAccessException.CAMERA_ERROR, "FACEDETECTOR UNOPERATIONAL");
