@@ -169,12 +169,13 @@ public class CameraService extends Service {
     private void processImage(Image image) {
         Log.d(LOG_TAG + "processImage", image.toString());
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-        byte[] bytes = new byte[buffer.remaining()];
-        buffer.get(bytes);
-        buffer.rewind();
+//        byte[] bytes = new byte[buffer.capacity()];
+//        buffer.get(bytes);
+//        buffer.rewind();
 //        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);//.copy(Bitmap.Config.RGB_565, false);\
         Bitmap bitmapImage = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.RGB_565);
-        bitmapImage.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
+//        bitmapImage.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
+        bitmapImage.copyPixelsFromBuffer(buffer);
         FaceDetector.Face[] faces = new FaceDetector.Face[1];
         if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
             FaceDetector.Face face = faces[0];
