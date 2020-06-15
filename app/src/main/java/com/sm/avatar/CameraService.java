@@ -14,12 +14,17 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
-import android.media.FaceDetector;
+
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
+
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -28,8 +33,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class CameraService extends Service {
-    protected static final int WIDTH = 1920;
-    protected static final int HEIGHT = 1080;
+    protected static final int WIDTH = 640;
+    protected static final int HEIGHT = 480;
     protected static final int CAMERA_CALIBRATION_DELAY = 3000;
     protected static final int CAMERACHOICE = CameraCharacteristics.LENS_FACING_FRONT;
     private static final String LOG_TAG = "CameraService_";
@@ -88,11 +93,11 @@ public class CameraService extends Service {
         public void onImageAvailable(ImageReader reader) {
             Log.d(LOG_TAG + "onImageAvailableListener.onImageAvailable", "onImageAvailable");
 //            if (System.currentTimeMillis() > cameraCaptureStartTime + CAMERA_CALIBRATION_DELAY) {
-                Image img = reader.acquireLatestImage();
-                if (img != null) {
-                    processImage(img);
-                    img.close();
-                }
+            Image img = reader.acquireLatestImage();
+            if (img != null) {
+                processImage(img);
+                img.close();
+            }
 //            }
         }
     };
@@ -107,7 +112,13 @@ public class CameraService extends Service {
             manager.openCamera(pickedCamera, cameraStateCallback, null);
             imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 1 /* images buffered */);
             imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
-            faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
+//            faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
+            faceDetector = new
+                    FaceDetector.Builder(getApplicationContext()).setTrackingEnabled(false)
+                    .build();
+            if(!faceDetector.isOperational()){
+                throw new CameraAccessException(CameraAccessException.CAMERA_ERROR, "FACEDETECTOR UNOPERATIONAL");
+            }
             Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
         } catch (CameraAccessException e) {
             Log.e(LOG_TAG + LOG_TAG + "readyCamera", e.getMessage());
@@ -167,22 +178,32 @@ public class CameraService extends Service {
     }
 
     private void processImage(Image image) {
-        Log.d(LOG_TAG + "processImage", image.toString()+", planesCount:"+ image.getPlanes().length);
+        Log.d(LOG_TAG + "processImage", image.toString() + ", planesCount:" + image.getPlanes().length);
         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-//        byte[] bytes = new byte[buffer.capacity()];
-//        buffer.get(bytes);
+        byte[] bytes = new byte[buffer.capacity()];
+        buffer.get(bytes);
 //        buffer.rewind();
-//        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);//.copy(Bitmap.Config.RGB_565, false);\
-        Bitmap bitmapImage = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.RGB_565);
+        Bitmap bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);//.copy(Bitmap.Config.RGB_565, false);\
+//        Bitmap bitmapImage = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.RGB_565);
 //        bitmapImage.copyPixelsFromBuffer(ByteBuffer.wrap(bytes));
-        bitmapImage.copyPixelsFromBuffer(buffer);
-        FaceDetector.Face[] faces = new FaceDetector.Face[1];
-        if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
-            FaceDetector.Face face = faces[0];
+//        bitmapImage.copyPixelsFromBuffer(buffer);
+        Frame frame = new Frame.Builder().setBitmap(bitmapImage).build();
+        SparseArray<Face> faces = faceDetector.detect(frame);
+        if (faces.size() > 0) {
+            Face face = faces.valueAt(0);
             Log.d(LOG_TAG + "processImage", face.toString());
+            float x = face.getPosition().x + face.getWidth()/2;
+            float y = face.getPosition().y + face.getHeight()/2;
         } else {
             Log.d(LOG_TAG + "processImage", "noFaces");
         }
+//        FaceDetector.Face[] faces = new FaceDetector.Face[1];
+//        if (faceDetector.findFaces(bitmapImage, faces) >= 1) {
+//            FaceDetector.Face face = faces[0];
+//            Log.d(LOG_TAG + "processImage", face.toString());
+//        } else {
+//            Log.d(LOG_TAG + "processImage", "noFaces");
+//        }
     }
 
     protected CaptureRequest createCaptureRequest() {

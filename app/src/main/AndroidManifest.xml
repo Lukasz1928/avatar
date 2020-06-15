@@ -28,6 +28,9 @@
             </intent-filter>
         </activity>
         <service android:name=".CameraService" />
+        <meta-data
+            android:name="com.google.android.gms.vision.DEPENDENCIES"
+            android:value="face" />
     </application>
 
 </manifest>
