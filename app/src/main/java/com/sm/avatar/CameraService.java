@@ -21,8 +21,8 @@ import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 import java.io.IOException;
 
 public class CameraService extends Service {
-    protected static final int WIDTH = 640;
-    protected static final int HEIGHT = 480;
+    protected static final float WIDTH = 640;
+    protected static final float HEIGHT = 480;
     private static final String LOG_TAG = "CameraService_";
     private CameraSource cameraSource;
     private FaceDetector faceDetector;
@@ -40,17 +40,17 @@ public class CameraService extends Service {
             super.onUpdate(detections, face);
             Log.d(LOG_TAG + "processImage", face.toString());
             float x = face.getPosition().x + face.getWidth() / 2;
-            float y = face.getPosition().y + face.getHeight() / 2;
+            float y = face.getPosition().y - face.getHeight() / 2;
             Message msg = handler.obtainMessage();
             Bundle b = new Bundle();
             String direction = "";
-            if (x < WIDTH / 3) {
+            if (x < WIDTH / 5 * 2) {
                 direction = "LookLeft";
-            } else if (x > WIDTH / 3 * 2) {
+            } else if (x > WIDTH / 5 * 3) {
                 direction = "LookRight";
-            } else if (y < HEIGHT / 3) {
+            } else if (y < HEIGHT / 5 * 2) {
                 direction = "LookUp";
-            } else if (y > HEIGHT / 3 * 2) {
+            } else if (y > HEIGHT / 5 * 3) {
                 direction = "LookDown";
             } else {
 
@@ -79,7 +79,7 @@ public class CameraService extends Service {
             faceDetector.setProcessor(new LargestFaceFocusingProcessor(faceDetector, faceTracker));
             cameraSource = new CameraSource.Builder(getApplicationContext(), faceDetector)
                     .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                    .setRequestedPreviewSize(WIDTH, HEIGHT)
+                    .setRequestedPreviewSize((int) WIDTH, (int) HEIGHT)
                     .setRequestedFps(1)
                     .build()
                     .start();

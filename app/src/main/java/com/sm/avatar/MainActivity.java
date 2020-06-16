@@ -75,15 +75,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        cameraServiceIntent = new Intent(this, CameraService.class);
-        cameraHandler = new Handler(){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-                String direction = msg.getData().getString("direction");
-                unityPlayer.UnitySendMessage("GameObject", direction, "");
-            }
-        };
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -102,6 +93,16 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        cameraServiceIntent = new Intent(this, CameraService.class);
+        cameraHandler = new Handler() {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                String direction = msg.getData().getString("direction");
+                Log.d("CameraHandler", "Received: " + msg.toString());
+                MainActivity.this.unityPlayer.UnitySendMessage("GameObject", direction, "");
+            }
+        };
     }
 
     private void setUpSpeechRecognizer() {
