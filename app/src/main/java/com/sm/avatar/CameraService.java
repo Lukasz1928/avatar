@@ -34,7 +34,7 @@ public class CameraService extends Service {
         this.handler = handler;
     }
 
-    private Tracker faceTracker = new Tracker<Face>() {
+    Tracker faceTracker = new Tracker<Face>() {
         @Override
         public void onUpdate(Detector.Detections<Face> detections, Face face) {
             super.onUpdate(detections, face);
@@ -42,7 +42,7 @@ public class CameraService extends Service {
             float x = face.getPosition().x + face.getWidth() / 2;
             float y = face.getPosition().y - face.getHeight() / 2;
             Message msg = handler.obtainMessage();
-            Bundle b = new Bundle();
+            Bundle b = msg.getData();
             String xdir = "Straight";
             String ydir = "";
             if (x < WIDTH / 3) {
@@ -66,7 +66,7 @@ public class CameraService extends Service {
         @Override
         public void onMissing(Detector.Detections<Face> detections) {
             Message msg = handler.obtainMessage();
-            Bundle b = new Bundle();
+            Bundle b = msg.getData();
             b.putString("direction", "LookStraight");
             msg.setData(b);
             handler.sendMessage(msg);
