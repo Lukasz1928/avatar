@@ -43,21 +43,31 @@ public class CameraService extends Service {
             float y = face.getPosition().y - face.getHeight() / 2;
             Message msg = handler.obtainMessage();
             Bundle b = new Bundle();
-            String direction = "";
-            if (x < WIDTH / 5 * 2) {
-                direction = "LookLeft";
-            } else if (x > WIDTH / 5 * 3) {
-                direction = "LookRight";
-            } else if (y < HEIGHT / 5 * 2) {
-                direction = "LookUp";
-            } else if (y > HEIGHT / 5 * 3) {
-                direction = "LookDown";
-            } else {
-
+            String xdir = "Straight";
+            String ydir = "";
+            if (x < WIDTH / 3) {
+                xdir = "Left";
+            } else if (x > (WIDTH / 3) * 2) {
+                xdir = "Right";
             }
+            if (y < HEIGHT / 3) {
+                ydir = "Down";
+            } else if (y > (HEIGHT / 3) * 2) {
+                ydir = "Up";
+            }
+            String direction = "Look" + xdir + ydir;
             Log.d(LOG_TAG + "processImage", String.format("Topleft:x:%f,y:%f", face.getPosition().x, face.getPosition().y));
             Log.d(LOG_TAG + "processImage", String.format("Center:x:%f,y:%f", x, y));
             b.putString("direction", direction);
+            msg.setData(b);
+            handler.sendMessage(msg);
+        }
+
+        @Override
+        public void onMissing(Detector.Detections<Face> detections) {
+            Message msg = handler.obtainMessage();
+            Bundle b = new Bundle();
+            b.putString("direction", "LookStraight");
             msg.setData(b);
             handler.sendMessage(msg);
         }
