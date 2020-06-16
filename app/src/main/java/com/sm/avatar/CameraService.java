@@ -15,9 +15,11 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
 
+import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import android.media.Image;
 import android.media.ImageReader;
@@ -32,6 +34,7 @@ import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -43,6 +46,7 @@ public class CameraService extends Service {
     private static final String LOG_TAG = "CameraService_";
     protected static long cameraCaptureStartTime;
     protected CameraDevice cameraDevice;
+    protected CameraSource cameraSource;
     protected CameraCaptureSession session;
     protected ImageReader imageReader;
     protected FaceDetector faceDetector;
@@ -107,15 +111,15 @@ public class CameraService extends Service {
     };
 
     public void readyCamera() {
-        CameraManager manager = (CameraManager) getSystemService(CAMERA_SERVICE);
+//        CameraManager manager = (CameraManager) getSystemService(CAMERA_SERVICE);
         try {
-            String pickedCamera = getCamera(manager);
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            manager.openCamera(pickedCamera, cameraStateCallback, null);
-            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
-            imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
+//            String pickedCamera = getCamera(manager);
+//            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+//                return;
+//            }
+//            manager.openCamera(pickedCamera, cameraStateCallback, null);
+//            imageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.JPEG, 2 /* images buffered */);
+//            imageReader.setOnImageAvailableListener(onImageAvailableListener, null);
 //            faceDetector = new FaceDetector(WIDTH, HEIGHT, 1);
             faceDetector = new
                     FaceDetector.Builder(getApplicationContext())
@@ -128,8 +132,15 @@ public class CameraService extends Service {
             if(!faceDetector.isOperational()){
                 throw new CameraAccessException(CameraAccessException.CAMERA_ERROR, "FACEDETECTOR UNOPERATIONAL");
             }
+            faceDetector.setProcessor(new LargestFaceFocusingProcessor(faceDetector, new FaceTracker(handler)));
+            cameraSource = new CameraSource.Builder(getApplicationContext(), faceDetector)
+                    .setFacing(CameraSource.CAMERA_FACING_FRONT)
+                    .setRequestedPreviewSize(640, 480)
+                    .setRequestedFps(1)
+                    .build()
+                    .start();
             Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
-        } catch (CameraAccessException e) {
+        } catch (CameraAccessException | IOException e) {
             Log.e(LOG_TAG + LOG_TAG + "readyCamera", e.getMessage());
         }
     }
