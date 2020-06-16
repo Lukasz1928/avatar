@@ -43,7 +43,13 @@ public class DialogflowRequestTask extends AsyncTask<Void, Void, DetectIntentRes
     protected void onPostExecute(DetectIntentResponse response) {
         if(response != null) {
             String msg = response.getQueryResult().getFulfillmentText();
-            this.asyncResponse.taskFinished(msg);
+            if(msg.equals("")) {
+                String noTextResponseText = "I could not understand your query.";
+                this.asyncResponse.taskFinished(noTextResponseText);
+            }
+            else {
+                this.asyncResponse.taskFinished(msg);
+            }
         }
         else {
             this.asyncResponse.taskFailed();

@@ -3,7 +3,6 @@ package com.sm.avatar;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -14,13 +13,11 @@ import com.sm.avatar.chatbot.dialogflow.DialogflowChatbotHandler;
 import com.sm.avatar.chatbot.exceptions.ChatbotInitializationException;
 import com.unity3d.player.UnityPlayer;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.os.Environment;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -34,28 +31,12 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.unity3d.player.UnityPlayer;
-
-
-import java.io.Console;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-
-import ai.api.AIConfiguration;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -283,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},
                     MY_PERMISSIONS_RECORD_AUDIO);
-        } else{
+        } else {
             recordAudioPermission = true;
         }
     }
