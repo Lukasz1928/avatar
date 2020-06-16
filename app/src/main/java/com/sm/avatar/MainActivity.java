@@ -56,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     private String utteranceID;
     private final Locale locale = Locale.UK;
 
+    public UnityPlayer getUnityPlayer() {
+        return unityPlayer;
+    }
+
     private ServiceConnection cameraServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -99,8 +103,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 String direction = msg.getData().getString("direction");
-                Log.d("CameraHandler", "Received: " + msg.toString());
-                MainActivity.this.unityPlayer.UnitySendMessage("GameObject", direction, "");
+                Log.d("CameraHandler", "Received: " + direction);
+                MainActivity.this.getUnityPlayer().UnitySendMessage("GameObject", direction, "");
             }
         };
     }
