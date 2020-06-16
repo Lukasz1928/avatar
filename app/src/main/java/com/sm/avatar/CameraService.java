@@ -85,19 +85,19 @@ public class CameraService extends Service {
     protected CameraDevice.StateCallback cameraStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
-            Log.d(LOG_TAG + LOG_TAG + "cameraStateCallback.onOpened", "CameraDevice.StateCallback onOpened");
+            Log.d(LOG_TAG + "cameraStateCallback.onOpened", "CameraDevice.StateCallback onOpened");
             cameraDevice = camera;
             actOnReadyCameraDevice();
         }
 
         @Override
         public void onDisconnected(@NonNull CameraDevice camera) {
-            Log.w(LOG_TAG + LOG_TAG + "cameraStateCallback.onDisconnected", "CameraDevice.StateCallback onDisconnected");
+            Log.w(LOG_TAG + "cameraStateCallback.onDisconnected", "CameraDevice.StateCallback onDisconnected");
         }
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {
-            Log.e(LOG_TAG + LOG_TAG + "cameraStateCallback.onError", "CameraDevice.StateCallback onError " + error);
+            Log.e(LOG_TAG + "cameraStateCallback.onError", "CameraDevice.StateCallback onError " + error);
         }
     };
 
@@ -110,7 +110,7 @@ public class CameraService extends Service {
                 session.setRepeatingRequest(createCaptureRequest(), null, null);
                 cameraCaptureStartTime = System.currentTimeMillis();
             } catch (CameraAccessException e) {
-                Log.e(LOG_TAG + LOG_TAG + "sessionStateCallback.onReady", e.getMessage());
+                Log.e(LOG_TAG + "sessionStateCallback.onReady", e.getMessage());
             }
         }
 
@@ -167,9 +167,9 @@ public class CameraService extends Service {
                     .setRequestedFps(1)
                     .build()
                     .start();
-            Log.d(LOG_TAG + LOG_TAG + "readyCamera", "imageReader created");
+            Log.d(LOG_TAG + "readyCamera", "imageReader created");
         } catch (CameraAccessException | IOException e) {
-            Log.e(LOG_TAG + LOG_TAG + "readyCamera", e.getMessage());
+            Log.e(LOG_TAG + "readyCamera", e.getMessage());
         }
     }
 
