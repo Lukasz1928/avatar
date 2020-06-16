@@ -1,26 +1,16 @@
 package com.sm.avatar;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
-
-import com.google.android.gms.vision.CameraSource;
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.face.Face;
-import com.google.android.gms.vision.face.FaceDetector;
-import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
-
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Binder;
@@ -32,7 +22,14 @@ import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
+
+import com.google.android.gms.vision.CameraSource;
+import com.google.android.gms.vision.Detector;
+import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.Tracker;
+import com.google.android.gms.vision.face.Face;
+import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.LargestFaceFocusingProcessor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -53,6 +50,37 @@ public class CameraService extends Service {
     private final IBinder mBinder = new LocalBinder();
     private MainActivity mainActivity;
     private Handler handler;
+
+    public void setHandler(Handler handler) {
+        this.handler = handler;
+    }
+
+    private Tracker faceTracker = new Tracker<Face>() {
+        @Override
+        public void onUpdate(Detector.Detections<Face> detections, Face face) {
+            super.onUpdate(detections, face);
+            Log.d(LOG_TAG + "processImage", face.toString());
+            float x = face.getPosition().x + face.getWidth() / 2;
+            float y = face.getPosition().y + face.getHeight() / 2;
+            Message msg = handler.obtainMessage();
+            Bundle b = new Bundle();
+            String direction = "";
+            if (x < WIDTH / 3) {
+                direction = "LookLeft";
+            } else if (x > WIDTH / 3 * 2) {
+                direction = "LookRight";
+            } else if (y < HEIGHT / 3) {
+                direction = "LookUp";
+            } else if (y > HEIGHT / 3 * 2) {
+                direction = "LookDown";
+            } else {
+
+            }
+            b.putString("direction", direction);
+            msg.setData(b);
+            handler.sendMessage(msg);
+        }
+    };
 
     protected CameraDevice.StateCallback cameraStateCallback = new CameraDevice.StateCallback() {
         @Override
@@ -129,10 +157,10 @@ public class CameraService extends Service {
                     .setLandmarkType(FaceDetector.NO_LANDMARKS)
                     .setMode(FaceDetector.FAST_MODE)
                     .build();
-            if(!faceDetector.isOperational()){
+            if (!faceDetector.isOperational()) {
                 throw new CameraAccessException(CameraAccessException.CAMERA_ERROR, "FACEDETECTOR UNOPERATIONAL");
             }
-            faceDetector.setProcessor(new LargestFaceFocusingProcessor(faceDetector, new FaceTracker(handler)));
+            faceDetector.setProcessor(new LargestFaceFocusingProcessor(faceDetector, faceTracker));
             cameraSource = new CameraSource.Builder(getApplicationContext(), faceDetector)
                     .setFacing(CameraSource.CAMERA_FACING_FRONT)
                     .setRequestedPreviewSize(WIDTH, HEIGHT)
@@ -212,18 +240,18 @@ public class CameraService extends Service {
         if (faces.size() > 0) {
             Face face = faces.valueAt(0);
             Log.d(LOG_TAG + "processImage", face.toString());
-            float x = face.getPosition().x + face.getWidth()/2;
-            float y = face.getPosition().y + face.getHeight()/2;
+            float x = face.getPosition().x + face.getWidth() / 2;
+            float y = face.getPosition().y + face.getHeight() / 2;
             Message msg = handler.obtainMessage();
             Bundle b = new Bundle();
             String direction = "";
-            if(x<WIDTH/3){
+            if (x < WIDTH / 3) {
                 direction = "LookLeft";
-            } else if (x>WIDTH/3*2){
+            } else if (x > WIDTH / 3 * 2) {
                 direction = "LookRight";
-            } else if (y<WIDTH/3){
+            } else if (y < WIDTH / 3) {
                 direction = "LookUp";
-            } else if (y>WIDTH/3*2){
+            } else if (y > WIDTH / 3 * 2) {
                 direction = "LookDown";
             } else {
 
@@ -254,9 +282,8 @@ public class CameraService extends Service {
         }
     }
 
-    public void registerClient(Activity activity, Handler handler) {
+    public void registerClient(Activity activity) {
         this.mainActivity = (MainActivity) activity;
-        this.handler = handler;
     }
 
     public class LocalBinder extends Binder {

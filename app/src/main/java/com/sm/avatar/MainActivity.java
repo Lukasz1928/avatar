@@ -62,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("cameraServiceConnection", componentName.toString() + " connected");
             CameraService.LocalBinder binder = (CameraService.LocalBinder) iBinder;
             cameraService = binder.getServiceInstance();
-            cameraService.registerClient(MainActivity.this, cameraHandler);
+            cameraService.setHandler(cameraHandler);
+            cameraService.registerClient(MainActivity.this);
         }
 
         @Override
