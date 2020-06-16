@@ -135,7 +135,7 @@ public class CameraService extends Service {
             faceDetector.setProcessor(new LargestFaceFocusingProcessor(faceDetector, new FaceTracker(handler)));
             cameraSource = new CameraSource.Builder(getApplicationContext(), faceDetector)
                     .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                    .setRequestedPreviewSize(640, 480)
+                    .setRequestedPreviewSize(WIDTH, HEIGHT)
                     .setRequestedFps(1)
                     .build()
                     .start();
@@ -256,6 +256,7 @@ public class CameraService extends Service {
 
     public void registerClient(Activity activity, Handler handler) {
         this.mainActivity = (MainActivity) activity;
+        this.handler = handler;
     }
 
     public class LocalBinder extends Binder {
