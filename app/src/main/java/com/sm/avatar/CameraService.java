@@ -46,9 +46,9 @@ public class CameraService extends Service {
             String xdir = "Straight";
             String ydir = "";
             if (x < WIDTH / 3) {
-                xdir = "Left";
-            } else if (x > (WIDTH / 3) * 2) {
                 xdir = "Right";
+            } else if (x > (WIDTH / 3) * 2) {
+                xdir = "Left";
             }
             if (y < HEIGHT / 3) {
                 ydir = "Down";
