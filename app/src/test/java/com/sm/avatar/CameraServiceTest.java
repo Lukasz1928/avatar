@@ -36,15 +36,15 @@ public class CameraServiceTest {
     @Parameterized.Parameters
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {0, 100, "LookLeftDown"},
+                {0, 100, "LookRightDown"},
                 {280, 100, "LookStraightDown"},
-                {450, 100, "LookRightDown"},
-                {0, 250, "LookLeft"},
+                {450, 100, "LookLeftDown"},
+                {0, 250, "LookRight"},
                 {280, 250, "LookStraight"},
-                {450, 250, "LookRight"},
-                {0, 450, "LookLeftUp"},
+                {450, 250, "LookLeft"},
+                {0, 450, "LookRightUp"},
                 {280, 450, "LookStraightUp"},
-                {450, 450, "LookRightUp"},
+                {450, 450, "LookLeftUp"},
         });
     }
 
